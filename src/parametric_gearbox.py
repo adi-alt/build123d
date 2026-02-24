@@ -3,25 +3,29 @@ import os
 
 os.makedirs("exports", exist_ok=True)
 
-length = 120
-width = 80
+length = 150
+width = 100
 height = 60
-wall = 6
+wall = 4
 
-with BuildPart() as gearbox:
+with BuildPart() as enclosure:
+    # Outer shell
     Box(length, width, height)
-    
-    with Locations((0,0,0)):
-        Box(length-wall*2, width-wall*2, height-wall*2, mode=Mode.SUBTRACT)
 
-    # Bearing holes
-    with Locations((0, width/2, 0), (0, -width/2, 0)):
-        Cylinder(10, height+2, mode=Mode.SUBTRACT)
+    # Hollow interior
+    Box(length - wall*2, width - wall*2, height - wall*2, mode=Mode.SUBTRACT)
 
-    # Mounting holes
-    with GridLocations(length/2-10, width/2-10, 2, 2):
-        Cylinder(4, height+2, mode=Mode.SUBTRACT)
+    # Vent slots (CORRECT way)
+    with BuildSketch(Plane.XY.offset(height/2 - wall/2)):
+        with GridLocations(20, 15, 5, 3):
+            SlotOverall(20, 4)
+    extrude(amount=wall + 2, mode=Mode.SUBTRACT)
 
-model = gearbox.part
-export_step(model, "exports/gearbox.step")
-export_stl(model, "exports/gearbox.stl")
+    # Screw bosses
+    with GridLocations(length/2 - 15, width/2 - 15, 2, 2):
+        Cylinder(5, height/2)
+
+model = enclosure.part
+
+export_step(model, "exports/enclosure.step")
+export_stl(model, "exports/enclosure.stl")
